@@ -18,13 +18,6 @@
         </select>
     </div>
 
-    <div class="config-panel">
-        <h3 id="txtConfigTitle">⚙️ Nastavení odesílání upozornění</h3>
-        <label for="emailInput" id="txtConfigLabel">Email pro zasílání upozornění na vyplněný dotazník:</label>
-        <input type="email" id="emailInput" value="recepce@vaseubytovani.cz" placeholder="napriklad@email.cz">
-        <div style="font-size: 11px; color: var(--text-muted);" id="txtConfigNote">* Pro reálné odesílání emailů doporučujeme propojit aplikaci se službou typu Formspree, EmailJS nebo vlastní backend skript.</div>
-    </div>
-
     <div class="header">
         <div class="logo-container">
             <a href="https://www.mustelka.cz" target="_blank" title="Přejít na mustelka.cz">
@@ -37,15 +30,15 @@
         <p id="txtHeaderDesc">Děkujeme, že jste se u nás ubytovali! Pomozte nám zlepšit naše služby.</p>
     </div>
 
-    <form id="feedbackForm">
+    <form id="feedbackForm" action="https://formspree.io/f/mjyborrv" method="POST">
         <div class="guest-info-section">
             <div class="text-group">
                 <label for="guestName" id="txtGuestName">Vaše jméno (volitelné):</label>
-                <input type="text" id="guestName" placeholder="např. Jan Novák" style="width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; outline: none; margin-bottom: 16px;">
+                <input type="text" id="guestName" name="guest_name" placeholder="např. Jan Novák" style="width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; outline: none; margin-bottom: 16px;">
             </div>
             <div class="text-group">
                 <label for="guestEmail" id="txtGuestEmail">Váš e-mail (volitelné):</label>
-                <input type="email" id="guestEmail" placeholder="např. jan@email.cz" style="width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; outline: none; margin-bottom: 24px;">
+                <input type="email" id="guestEmail" name="guest_email" placeholder="např. jan@email.cz" style="width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; outline: none; margin-bottom: 24px;">
             </div>
         </div>
 
@@ -53,8 +46,11 @@
 
         <div class="text-group">
             <label for="comments" id="txtCommentsLabel">Další připomínky a návrhy (volitelné):</label>
-            <textarea id="comments" placeholder="Máte nějaké další připomínky, návrhy nebo chcete něco vyzdvihnout?"></textarea>
+            <textarea id="comments" name="comments" placeholder="Máte nějaké další připomínky, návrhy nebo chcete něco vyzdvihnout?"></textarea>
         </div>
+
+        <!-- Skrytá pole pro přenos hodnocení přes Formspree -->
+        <input type="hidden" id="ratingsPayload" name="ratings_data">
 
         <button type="submit" class="submit-btn" id="txtSubmitBtn">Odeslat hodnocení</button>
     </form>
@@ -68,9 +64,6 @@
 <script>
     const translations = {
         cs: {
-            configTitle: "⚙️ Nastavení odesílání upozornění",
-            configLabel: "Email pro zasílání upozornění na vyplněný dotazník:",
-            configNote: "* Pro reálné odesílání emailů doporučujeme propojit aplikaci se službou typu Formspree, EmailJS nebo vlastní backend skript.",
             headerTitle: "Zpětná vazba od hostů",
             headerDesc: "Děkujeme, že jste se u nás ubytovali! Pomozte nám zlepšit naše služby.",
             guestName: "Vaše jméno (volitelné):",
@@ -94,9 +87,6 @@
             ]
         },
         en: {
-            configTitle: "⚙️ Notification Settings",
-            configLabel: "Email for submission notifications:",
-            configNote: "* For live email delivery, we recommend integrating with Formspree, EmailJS, or a backend script.",
             headerTitle: "Guest Feedback",
             headerDesc: "Thank you for staying with us! Help us improve our services.",
             guestName: "Your Name (optional):",
@@ -120,9 +110,6 @@
             ]
         },
         de: {
-            configTitle: "⚙️ Benachrichtigungseinstellungen",
-            configLabel: "E-Mail für Benachrichtigungen über eingereichte Umfragen:",
-            configNote: "* Für den tatsächlichen E-Mail-Versand empfehlen wir die Integration mit Formspree, EmailJS oder einem Backend-Skript.",
             headerTitle: "Gästefeedback",
             headerDesc: "Vielen Dank für Ihren Aufenthalt bei uns! Helfen Sie uns, unseren Service zu verbessern.",
             guestName: "Ihr Name (optional):",
@@ -146,9 +133,6 @@
             ]
         },
         pl: {
-            configTitle: "⚙️ Ustawienia powiadomień",
-            configLabel: "E-mail do powiadomień o przesłanej ankiecie:",
-            configNote: "* W celu faktycznego wysyłania e-maili zalecamy integrację z usługą typu Formspree, EmailJS lub własnym skryptem backendowym.",
             headerTitle: "Opinie gości",
             headerDesc: "Dziękujemy za pobyt u nas! Pomóż nam ulepszyć nasze usługi.",
             guestName: "Twoje imię (opcjonalnie):",
@@ -175,12 +159,11 @@
 
     const questionIds = ['overall', 'cleanliness', 'comfort', 'staff', 'location', 'value', 'nps'];
     const ratings = {};
+    let currentLang = 'cs';
 
-    function renderForm(lang) {
+    function changeLanguage(lang) {
+        currentLang = lang;
         const t = translations[lang];
-        document.getElementById('txtConfigTitle').innerText = t.configTitle;
-        document.getElementById('txtConfigLabel').innerText = t.configLabel;
-        document.getElementById('txtConfigNote').innerText = t.configNote;
         document.getElementById('txtHeaderTitle').innerText = t.headerTitle;
         document.getElementById('txtHeaderDesc').innerText = t.headerDesc;
         document.getElementById('txtGuestName').innerText = t.guestName;
@@ -243,42 +226,47 @@
         });
     }
 
-    function changeLanguage(lang) {
-        renderForm(lang);
-    }
-
-    document.addEventListener('DOMContentLoaded', () => {
-        renderForm('cs');
-    });
-
-    document.getElementById('feedbackForm').addEventListener('submit', (e) => {
+    document.getElementById('feedbackForm').addEventListener('submit', async (e) => {
         e.preventDefault();
-        const currentLang = document.getElementById('langSelect').value;
 
         if (Object.keys(ratings).length < questionIds.length) {
             alert(translations[currentLang].alertRating);
             return;
         }
 
-        const adminEmail = document.getElementById('emailInput').value;
-        const guestName = document.getElementById('guestName').value;
-        const guestEmail = document.getElementById('guestEmail').value;
-        const comments = document.getElementById('comments').value;
+        // Připravení textového souhrnu hodnocení do skrytého pole pro Formspree
+        const t = translations[currentLang];
+        let ratingsSummary = "";
+        questionIds.forEach((id, index) => {
+            ratingsSummary += `${t.questions[index].title}: ${ratings[id]}/10\n`;
+        });
+        document.getElementById('ratingsPayload').value = ratingsSummary;
 
-        const formData = {
-            targetEmail: adminEmail,
-            guestName: guestName,
-            guestEmail: guestEmail,
-            ratings: ratings,
-            comments: comments,
-            timestamp: new Date().toISOString()
-        };
+        const form = e.target;
+        const formData = new FormData(form);
 
-        console.log('Odesílám data na email:', adminEmail, formData);
+        try {
+            const response = await fetch(form.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'Accept': 'application/json'
+                }
+            });
 
-        document.getElementById('feedbackForm').style.display = 'none';
-        document.getElementById('successMessage').style.display = 'block';
+            if (response.ok) {
+                document.getElementById('feedbackForm').style.display = 'none';
+                document.getElementById('successMessage').style.display = 'block';
+            } else {
+                alert('Chyba při odesílání formuláře. Zkuste to prosím znovu.');
+            }
+        } catch (error) {
+            alert('Došlo k síťové chybě.');
+        }
     });
+
+    // Inicializace při načtení
+    changeLanguage('cs');
 </script>
 
 </body>
