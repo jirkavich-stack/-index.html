@@ -9,156 +9,266 @@
 <body>
 
 <div class="container">
+    <div class="lang-selector">
+        <select id="langSelect" onchange="changeLanguage(this.value)">
+            <option value="cs">🇨🇿 Čeština</option>
+            <option value="en">🇬🇧 English</option>
+            <option value="de">🇩🇪 Deutsch</option>
+            <option value="pl">🇵🇱 Polski</option>
+        </select>
+    </div>
+
     <div class="config-panel">
-        <h3>⚙️ Nastavení odesílání upozornění</h3>
-        <label for="emailInput">Email pro zasílání upozornění na vyplněný dotazník:</label>
+        <h3 id="txtConfigTitle">⚙️ Nastavení odesílání upozornění</h3>
+        <label for="emailInput" id="txtConfigLabel">Email pro zasílání upozornění na vyplněný dotazník:</label>
         <input type="email" id="emailInput" value="recepce@vaseubytovani.cz" placeholder="napriklad@email.cz">
-        <div style="font-size: 11px; color: var(--text-muted);">* Pro reálné odesílání emailů doporučujeme propojit aplikaci se službou typu Formspree, EmailJS nebo vlastní backend skript.</div>
+        <div style="font-size: 11px; color: var(--text-muted);" id="txtConfigNote">* Pro reálné odesílání emailů doporučujeme propojit aplikaci se službou typu Formspree, EmailJS nebo vlastní backend skript.</div>
     </div>
 
     <div class="header">
- <div class="logo-container">
-    <a href="https://www.mustelka.cz" target="_blank" title="Přejít na mustelka.cz">
-        <div class="logo-placeholder" id="logoUploadBtn">
-            <img src="logo.png" alt="Logo ubytování" id="logoImg" onerror="this.style.display='none'; this.parentElement.innerText='LOGO';">
+        <div class="logo-container">
+            <a href="https://www.mustelka.cz" target="_blank" title="Přejít na mustelka.cz">
+                <div class="logo-placeholder" id="logoUploadBtn">
+                    <img src="logo.png" alt="Logo ubytování" id="logoImg" onerror="this.style.display='none'; this.parentElement.innerText='LOGO';">
+                </div>
+            </a>
         </div>
-    </a>
-</div>
-</div>
-        <h1>Zpětná vazba od hostů</h1>
-        <p>Děkujeme, že jste se u nás ubytovali! Pomozte nám zlepšit naše služby.</p>
+        <h1 id="txtHeaderTitle">Zpětná vazba od hostů</h1>
+        <p id="txtHeaderDesc">Děkujeme, že jste se u nás ubytovali! Pomozte nám zlepšit naše služby.</p>
     </div>
 
     <form id="feedbackForm">
+        <div class="guest-info-section">
+            <div class="text-group">
+                <label for="guestName" id="txtGuestName">Vaše jméno (volitelné):</label>
+                <input type="text" id="guestName" placeholder="např. Jan Novák" style="width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; outline: none; margin-bottom: 16px;">
+            </div>
+            <div class="text-group">
+                <label for="guestEmail" id="txtGuestEmail">Váš e-mail (volitelné):</label>
+                <input type="email" id="guestEmail" placeholder="např. jan@email.cz" style="width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; outline: none; margin-bottom: 24px;">
+            </div>
+        </div>
+
         <div id="questionsContainer"></div>
 
         <div class="text-group">
-            <label for="comments">Další připomínky a návrhy (volitelné):</label>
+            <label for="comments" id="txtCommentsLabel">Další připomínky a návrhy (volitelné):</label>
             <textarea id="comments" placeholder="Máte nějaké další připomínky, návrhy nebo chcete něco vyzdvihnout?"></textarea>
         </div>
 
-        <button type="submit" class="submit-btn">Odeslat hodnocení</button>
+        <button type="submit" class="submit-btn" id="txtSubmitBtn">Odeslat hodnocení</button>
     </form>
 
     <div class="success-message" id="successMessage">
-        <h2>Děkujeme za váš názor!</h2>
-        <p>Vaše hodnocení bylo úspěšně odesláno.</p>
+        <h2 id="txtSuccessTitle">Děkujeme za váš názor!</h2>
+        <p id="txtSuccessDesc">Vaše hodnocení bylo úspěšně odesláno.</p>
     </div>
 </div>
 
 <script>
-    const questions = [
-        {
-            id: 'overall',
-            title: '1. Celková spokojenost',
-            desc: 'Jak hodnotíte svůj celkový pobyt u nás?'
+    const translations = {
+        cs: {
+            configTitle: "⚙️ Nastavení odesílání upozornění",
+            configLabel: "Email pro zasílání upozornění na vyplněný dotazník:",
+            configNote: "* Pro reálné odesílání emailů doporučujeme propojit aplikaci se službou typu Formspree, EmailJS nebo vlastní backend skript.",
+            headerTitle: "Zpětná vazba od hostů",
+            headerDesc: "Děkujeme, že jste se u nás ubytovali! Pomozte nám zlepšit naše služby.",
+            guestName: "Vaše jméno (volitelné):",
+            guestEmail: "Váš e-mail (volitelné):",
+            commentsLabel: "Další připomínky a návrhy (volitelné):",
+            commentsPlaceholder: "Máte nějaké další připomínky, návrhy nebo chcete něco vyzdvihnout?",
+            submitBtn: "Odeslat hodnocení",
+            successTitle: "Děkujeme za váš názor!",
+            successDesc: "Vaše hodnocení bylo úspěšně odesláno.",
+            scaleWorst: "1 – Nejhorší",
+            scaleBest: "10 – Vynikající",
+            alertRating: "Prosím ohodnoťte všechny otázky.",
+            questions: [
+                { title: "1. Celková spokojenost", desc: "Jak hodnotíte svůj celkový pobyt u nás?" },
+                { title: "2. Čistota", desc: "Jak jste byli spokojeni s čistotou pokoje a společných prostor?" },
+                { title: "3. Pohodlí a vybavení", desc: "Jak hodnotíte pohodlí postele, kvalitu spánku a vybavenost pokoje?" },
+                { title: "4. Péče o hosty a atmosféra", desc: "Jak hodnotíte péči o hosty, ochotu personálu a celkovou atmosféru?" },
+                { title: "5. Okolí a prostředí", desc: "Jak hodnotíte klid, prostředí a možnosti vyžití v okolí ubytování?" },
+                { title: "6. Poměr cena/výkon", desc: "Jak hodnotíte hodnotu ubytování vzhledem k zaplacené ceně?" },
+                { title: "7. Doporučení (NPS)", desc: "Jaká je pravděpodobnost, že naše ubytování doporučíte přátelům nebo kolegům?" }
+            ]
         },
-        {
-            id: 'cleanliness',
-            title: '2. Čistota',
-            desc: 'Jak jste byli spokojeni s čistotou pokoje a společných prostor?'
+        en: {
+            configTitle: "⚙️ Notification Settings",
+            configLabel: "Email for submission notifications:",
+            configNote: "* For live email delivery, we recommend integrating with Formspree, EmailJS, or a backend script.",
+            headerTitle: "Guest Feedback",
+            headerDesc: "Thank you for staying with us! Help us improve our services.",
+            guestName: "Your Name (optional):",
+            guestEmail: "Your Email (optional):",
+            commentsLabel: "Additional comments & suggestions (optional):",
+            commentsPlaceholder: "Do you have any further comments, suggestions, or highlights?",
+            submitBtn: "Submit Feedback",
+            successTitle: "Thank you for your feedback!",
+            successDesc: "Your rating has been successfully submitted.",
+            scaleWorst: "1 – Worst",
+            scaleBest: "10 – Excellent",
+            alertRating: "Please rate all questions.",
+            questions: [
+                { title: "1. Overall Satisfaction", desc: "How do you rate your overall stay with us?" },
+                { title: "2. Cleanliness", desc: "How satisfied were you with the cleanliness of the room and common areas?" },
+                { title: "3. Comfort & Amenities", desc: "How do you rate bed comfort, sleep quality, and room equipment?" },
+                { title: "4. Guest Care & Atmosphere", desc: "How do you rate guest care, staff willingness, and overall atmosphere?" },
+                { title: "5. Location & Surroundings", desc: "How do you rate the tranquility, surroundings, and activities nearby?" },
+                { title: "6. Value for Money", desc: "How do you rate the accommodation value relative to the price paid?" },
+                { title: "7. Recommendation (NPS)", desc: "What is the likelihood that you would recommend our accommodation to friends or colleagues?" }
+            ]
         },
-        {
-            id: 'comfort',
-            title: '3. Pohodlí a vybavení',
-            desc: 'Jak hodnotíte pohodlí postele, kvalitu spánku a vybavenost pokoje?'
+        de: {
+            configTitle: "⚙️ Benachrichtigungseinstellungen",
+            configLabel: "E-Mail für Benachrichtigungen über eingereichte Umfragen:",
+            configNote: "* Für den tatsächlichen E-Mail-Versand empfehlen wir die Integration mit Formspree, EmailJS oder einem Backend-Skript.",
+            headerTitle: "Gästefeedback",
+            headerDesc: "Vielen Dank für Ihren Aufenthalt bei uns! Helfen Sie uns, unseren Service zu verbessern.",
+            guestName: "Ihr Name (optional):",
+            guestEmail: "Ihre E-Mail (optional):",
+            commentsLabel: "Weitere Anmerkungen und Vorschläge (optional):",
+            commentsPlaceholder: "Haben Sie weitere Kommentare, Vorschläge oder möchten Sie etwas hervorheben?",
+            submitBtn: "Bewertung absenden",
+            successTitle: "Vielen Dank für Ihr Feedback!",
+            successDesc: "Ihre Bewertung wurde erfolgreich gesendet.",
+            scaleWorst: "1 – Am schlechtesten",
+            scaleBest: "10 – Hervorragend",
+            alertRating: "Bitte bewerten Sie alle Fragen.",
+            questions: [
+                { title: "1. Gesamtzufriedenheit", desc: "Wie bewerten Sie Ihren gesamten Aufenthalt bei uns?" },
+                { title: "2. Sauberkeit", desc: "Wie zufrieden waren Sie mit der Sauberkeit des Zimmers und der Gemeinschaftsbereiche?" },
+                { title: "3. Komfort & Ausstattung", desc: "Wie bewerten Sie Bettkomfort, Schlafqualität und Zimmerausstattung?" },
+                { title: "4. Gästebetreuung & Atmosphäre", desc: "Wie bewerten Sie die Betreuung, die Hilfsbereitschaft des Personals und die Atmosphäre?" },
+                { title: "5. Lage & Umgebung", desc: "Wie bewerten Sie Ruhe, Umgebung und Freizeitmöglichkeiten in der Nähe?" },
+                { title: "6. Preis-Leistungs-Verhältnis", desc: "Wie bewerten Sie die Unterkunft im Verhältnis zum gezahlten Preis?" },
+                { title: "7. Weiterempfehlung (NPS)", desc: "Wie wahrscheinlich ist es, dass Sie unsere Unterkunft Freunden oder Kollegen weiterempfehlen?" }
+            ]
         },
-        {
-            id: 'staff',
-            title: '4. Péče o hosty a atmosféra',
-            desc: 'Jak hodnotíte péči o hosty, ochotu personálu a celkovou atmosféru?'
-        },
-        {
-            id: 'location',
-            title: '5. Okolí a prostředí',
-            desc: 'Jak hodnotíte klid, prostředí a možnosti vyžití v okolí ubytování?'
-        },
-        {
-            id: 'value',
-            title: '6. Poměr cena/výkon',
-            desc: 'Jak hodnotíte hodnotu ubytování vzhledem k zaplacené ceně?'
-        },
-        {
-            id: 'nps',
-            title: '7. Doporučení (NPS)',
-            desc: 'Jaká je pravděpodobnost, že naše ubytování doporučíte přátelům nebo kolegům?'
+        pl: {
+            configTitle: "⚙️ Ustawienia powiadomień",
+            configLabel: "E-mail do powiadomień o przesłanej ankiecie:",
+            configNote: "* W celu faktycznego wysyłania e-maili zalecamy integrację z usługą typu Formspree, EmailJS lub własnym skryptem backendowym.",
+            headerTitle: "Opinie gości",
+            headerDesc: "Dziękujemy za pobyt u nas! Pomóż nam ulepszyć nasze usługi.",
+            guestName: "Twoje imię (opcjonalnie):",
+            guestEmail: "Twój e-mail (opcjonalnie):",
+            commentsLabel: "Dodatkowe uwagi i sugestie (opcjonalnie):",
+            commentsPlaceholder: "Masz jakieś dodatkowe uwagi, sugestie lub chcesz coś wyróżnić?",
+            submitBtn: "Wyślij ocenę",
+            successTitle: "Dziękujemy za Twoją opinię!",
+            successDesc: "Twoja ocena została pomyślnie wysłana.",
+            scaleWorst: "1 – Najgorsza",
+            scaleBest: "10 – Doskonała",
+            alertRating: "Proszę ocenić wszystkie pytania.",
+            questions: [
+                { title: "1. Ogólne zadowolenie", desc: "Jak oceniasz swój ogólny pobyt u nas?" },
+                { title: "2. Czystość", desc: "Jak oceniasz czystość pokoju i części wspólnych?" },
+                { title: "3. Wygoda i wyposażenie", desc: "Jak oceniasz wygodę łóżka, jakość snu i wyposażenie pokoju?" },
+                { title: "4. Obsługa gości i atmosfera", desc: "Jak oceniasz opiekę nad gośćmi, pomocność personelu i ogólną atmosferę?" },
+                { title: "5. Okolica i otoczenie", desc: "Jak oceniasz spokój, otoczenie i możliwości spędzania czasu w pobliżu?" },
+                { title: "6. Stosunek ceny do jakości", desc: "Jak oceniasz wartość zakwaterowania w stosunku do zapłaconej ceny?" },
+                { title: "7. Polecenie (NPS)", desc: "Jakie jest prawdopodobieństwo, że polecisz nasz obiekt znajomym lub współpracownikom?" }
+            ]
         }
-    ];
+    };
 
-    const container = document.getElementById('questionsContainer');
+    const questionIds = ['overall', 'cleanliness', 'comfort', 'staff', 'location', 'value', 'nps'];
     const ratings = {};
 
-    questions.forEach(q => {
-        const group = document.createElement('div');
-        group.className = 'question-group';
+    function renderForm(lang) {
+        const t = translations[lang];
+        document.getElementById('txtConfigTitle').innerText = t.configTitle;
+        document.getElementById('txtConfigLabel').innerText = t.configLabel;
+        document.getElementById('txtConfigNote').innerText = t.configNote;
+        document.getElementById('txtHeaderTitle').innerText = t.headerTitle;
+        document.getElementById('txtHeaderDesc').innerText = t.headerDesc;
+        document.getElementById('txtGuestName').innerText = t.guestName;
+        document.getElementById('txtGuestEmail').innerText = t.guestEmail;
+        document.getElementById('txtCommentsLabel').innerText = t.commentsLabel;
+        document.getElementById('comments').placeholder = t.commentsPlaceholder;
+        document.getElementById('txtSubmitBtn').innerText = t.submitBtn;
+        document.getElementById('txtSuccessTitle').innerText = t.successTitle;
+        document.getElementById('txtSuccessDesc').innerText = t.successDesc;
 
-        let buttonsHTML = '<div class="scale-container">';
-        for (let i = 1; i <= 10; i++) {
-            buttonsHTML += `<button type="button" class="scale-btn" data-question="${q.id}" data-value="${i}" title="${i} z 10 hvězdiček">★</button>`;
-        }
-        buttonsHTML += '</div>';
+        const container = document.getElementById('questionsContainer');
+        container.innerHTML = '';
 
-        group.innerHTML = `
-            <div class="question-title">${q.title}</div>
-            <div class="question-desc">${q.desc}</div>
-            ${buttonsHTML}
-            <div class="scale-labels">
-                <span>1 – Nejhorší</span>
-                <span>10 – Vynikající</span>
-            </div>
-        `;
-        container.appendChild(group);
-    });
+        t.questions.forEach((q, index) => {
+            const qId = questionIds[index];
+            const group = document.createElement('div');
+            group.className = 'question-group';
 
-    document.querySelectorAll('.scale-btn').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            const targetBtn = e.currentTarget;
-            const qId = targetBtn.getAttribute('data-question');
-            const val = parseInt(targetBtn.getAttribute('data-value'), 10);
-
-            const allBtnsInGroup = document.querySelectorAll(`.scale-btn[data-question="${qId}"]`);
-            allBtnsInGroup.forEach(b => {
-                const bVal = parseInt(b.getAttribute('data-value'), 10);
-                if (bVal <= val) {
-                    b.classList.add('selected');
-                } else {
-                    b.classList.remove('selected');
-                }
-            });
-
-            ratings[qId] = val;
-        });
-    });
-
-    const logoUploadBtn = document.getElementById('logoUploadBtn');
-    const logoFile = document.getElementById('logoFile');
-
-    logoUploadBtn.addEventListener('click', () => logoFile.click());
-
-    logoFile.addEventListener('change', (e) => {
-        const file = e.target.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = function(event) {
-                logoUploadBtn.innerHTML = `<img src="${event.target.result}" alt="Logo">`;
+            let buttonsHTML = '<div class="scale-container">';
+            for (let i = 1; i <= 10; i++) {
+                const selectedClass = (ratings[qId] && i <= ratings[qId]) ? ' selected' : '';
+                buttonsHTML += `<button type="button" class="scale-btn${selectedClass}" data-question="${qId}" data-value="${i}" title="${i} / 10">★</button>`;
             }
-            reader.readAsDataURL(file);
-        }
+            buttonsHTML += '</div>';
+
+            group.innerHTML = `
+                <div class="question-title">${q.title}</div>
+                <div class="question-desc">${q.desc}</div>
+                ${buttonsHTML}
+                <div class="scale-labels">
+                    <span>${t.scaleWorst}</span>
+                    <span>${t.scaleBest}</span>
+                </div>
+            `;
+            container.appendChild(group);
+        });
+
+        attachStarEvents();
+    }
+
+    function attachStarEvents() {
+        document.querySelectorAll('.scale-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const targetBtn = e.currentTarget;
+                const qId = targetBtn.getAttribute('data-question');
+                const val = parseInt(targetBtn.getAttribute('data-value'), 10);
+
+                const allBtnsInGroup = document.querySelectorAll(`.scale-btn[data-question="${qId}"]`);
+                allBtnsInGroup.forEach(b => {
+                    const bVal = parseInt(b.getAttribute('data-value'), 10);
+                    if (bVal <= val) {
+                        b.classList.add('selected');
+                    } else {
+                        b.classList.remove('selected');
+                    }
+                });
+
+                ratings[qId] = val;
+            });
+        });
+    }
+
+    function changeLanguage(lang) {
+        renderForm(lang);
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        renderForm('cs');
     });
 
     document.getElementById('feedbackForm').addEventListener('submit', (e) => {
         e.preventDefault();
+        const currentLang = document.getElementById('langSelect').value;
 
-        if (Object.keys(ratings).length < questions.length) {
-            alert('Prosím ohodnoťte všechny otázky.');
+        if (Object.keys(ratings).length < questionIds.length) {
+            alert(translations[currentLang].alertRating);
             return;
         }
 
         const adminEmail = document.getElementById('emailInput').value;
+        const guestName = document.getElementById('guestName').value;
+        const guestEmail = document.getElementById('guestEmail').value;
         const comments = document.getElementById('comments').value;
 
         const formData = {
             targetEmail: adminEmail,
+            guestName: guestName,
+            guestEmail: guestEmail,
             ratings: ratings,
             comments: comments,
             timestamp: new Date().toISOString()
@@ -170,8 +280,6 @@
         document.getElementById('successMessage').style.display = 'block';
     });
 </script>
-
-    
 
 </body>
 </html>
